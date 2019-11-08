@@ -1,31 +1,31 @@
-extern crate ffmpeg;
+extern crate ffmpeg_next;
 
 use std::env;
 
 fn main() {
-    ffmpeg::init().unwrap();
+    ffmpeg_next::init().unwrap();
 
-    match ffmpeg::format::input(&env::args().nth(1).expect("missing file")) {
+    match ffmpeg_next::format::input(&env::args().nth(1).expect("missing file")) {
         Ok(context) => {
             for (k, v) in context.metadata().iter() {
                 println!("{}: {}", k, v);
             }
 
-            if let Some(stream) = context.streams().best(ffmpeg::media::Type::Video) {
+            if let Some(stream) = context.streams().best(ffmpeg_next::media::Type::Video) {
                 println!("Best video stream index: {}", stream.index());
             }
 
-            if let Some(stream) = context.streams().best(ffmpeg::media::Type::Audio) {
+            if let Some(stream) = context.streams().best(ffmpeg_next::media::Type::Audio) {
                 println!("Best audio stream index: {}", stream.index());
             }
 
-            if let Some(stream) = context.streams().best(ffmpeg::media::Type::Subtitle) {
+            if let Some(stream) = context.streams().best(ffmpeg_next::media::Type::Subtitle) {
                 println!("Best subtitle stream index: {}", stream.index());
             }
 
             println!(
                 "duration (seconds): {:.2}",
-                context.duration() as f64 / f64::from(ffmpeg::ffi::AV_TIME_BASE)
+                context.duration() as f64 / f64::from(ffmpeg_next::ffi::AV_TIME_BASE)
             );
 
             for stream in context.streams() {
@@ -46,7 +46,7 @@ fn main() {
                 println!("\tmedium: {:?}", codec.medium());
                 println!("\tid: {:?}", codec.id());
 
-                if codec.medium() == ffmpeg::media::Type::Video {
+                if codec.medium() == ffmpeg_next::media::Type::Video {
                     if let Ok(video) = codec.decoder().video() {
                         println!("\tbit_rate: {}", video.bit_rate());
                         println!("\tmax_rate: {}", video.max_bit_rate());
@@ -67,7 +67,7 @@ fn main() {
                         println!("\tvideo.references: {}", video.references());
                         println!("\tvideo.intra_dc_precision: {}", video.intra_dc_precision());
                     }
-                } else if codec.medium() == ffmpeg::media::Type::Audio {
+                } else if codec.medium() == ffmpeg_next::media::Type::Audio {
                     if let Ok(audio) = codec.decoder().audio() {
                         println!("\tbit_rate: {}", audio.bit_rate());
                         println!("\tmax_rate: {}", audio.max_bit_rate());

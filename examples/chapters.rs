@@ -1,11 +1,11 @@
-extern crate ffmpeg;
+extern crate ffmpeg_next;
 
 use std::env;
 
 fn main() {
-    ffmpeg::init().unwrap();
+    ffmpeg_next::init().unwrap();
 
-    match ffmpeg::format::input(&env::args().nth(1).expect("missing input file name")) {
+    match ffmpeg_next::format::input(&env::args().nth(1).expect("missing input file name")) {
         Ok(ictx) => {
             println!("Nb chapters: {}", ictx.nb_chapters());
 
@@ -21,7 +21,7 @@ fn main() {
             }
 
             let mut octx =
-                ffmpeg::format::output(&"test.mkv".to_owned()).expect("Couldn't open test file");
+                ffmpeg_next::format::output(&"test.mkv".to_owned()).expect("Couldn't open test file");
 
             for chapter in ictx.chapters() {
                 let title = match chapter.metadata().get("title") {

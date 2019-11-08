@@ -1,3 +1,4 @@
+use std::io::Read;
 pub use util::format::{pixel, Pixel};
 pub use util::format::{sample, Sample};
 use util::interrupt;

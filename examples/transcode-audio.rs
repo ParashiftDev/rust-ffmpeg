@@ -1,16 +1,16 @@
-extern crate ffmpeg;
+extern crate ffmpeg_next;
 
 use std::env;
 use std::path::Path;
 
-use ffmpeg::{codec, filter, format, frame, media};
-use ffmpeg::{rescale, Rescale};
+use ffmpeg_next::{codec, filter, format, frame, media};
+use ffmpeg_next::{rescale, Rescale};
 
 fn filter(
     spec: &str,
     decoder: &codec::decoder::Audio,
     encoder: &codec::encoder::Audio,
-) -> Result<filter::Graph, ffmpeg::Error> {
+) -> Result<filter::Graph, ffmpeg_next::Error> {
     let mut filter = filter::Graph::new();
 
     let args = format!(
@@ -40,7 +40,7 @@ fn filter(
     if let Some(codec) = encoder.codec() {
         if !codec
             .capabilities()
-            .contains(ffmpeg::codec::capabilities::VARIABLE_FRAME_SIZE)
+            .contains(ffmpeg_next::codec::capabilities::VARIABLE_FRAME_SIZE)
         {
             filter
                 .get("out")
@@ -65,17 +65,17 @@ fn transcoder<P: AsRef<Path>>(
     octx: &mut format::context::Output,
     path: &P,
     filter_spec: &str,
-) -> Result<Transcoder, ffmpeg::Error> {
+) -> Result<Transcoder, ffmpeg_next::Error> {
     let input = ictx.streams()
         .best(media::Type::Audio)
         .expect("could not find best audio stream");
     let mut decoder = input.codec().decoder().audio()?;
-    let codec = ffmpeg::encoder::find(octx.format().codec(path, media::Type::Audio))
+    let codec = ffmpeg_next::encoder::find(octx.format().codec(path, media::Type::Audio))
         .expect("failed to find encoder")
         .audio()?;
     let global = octx.format()
         .flags()
-        .contains(ffmpeg::format::flag::GLOBAL_HEADER);
+        .contains(ffmpeg_next::format::flag::GLOBAL_HEADER);
 
     decoder.set_parameters(input.parameters())?;
 
@@ -85,10 +85,10 @@ fn transcoder<P: AsRef<Path>>(
     let channel_layout = codec
         .channel_layouts()
         .map(|cls| cls.best(decoder.channel_layout().channels()))
-        .unwrap_or(ffmpeg::channel_layout::STEREO);
+        .unwrap_or(ffmpeg_next::channel_layout::STEREO);
 
     if global {
-        encoder.set_flags(ffmpeg::codec::flag::GLOBAL_HEADER);
+        encoder.set_flags(ffmpeg_next::codec::flag::GLOBAL_HEADER);
     }
 
     encoder.set_rate(decoder.rate() as i32);
@@ -132,7 +132,7 @@ fn transcoder<P: AsRef<Path>>(
 // Example 3: Seek to a specified position (in seconds)
 // transcode-audio in.mp3 out.mp3 anull 30
 fn main() {
-    ffmpeg::init().unwrap();
+    ffmpeg_next::init().unwrap();
 
     let input = env::args().nth(1).expect("missing input");
     let output = env::args().nth(2).expect("missing output");
@@ -144,7 +144,7 @@ fn main() {
     let mut transcoder = transcoder(&mut ictx, &mut octx, &output, &filter).unwrap();
 
     if let Some(position) = seek {
-        // If the position was given in seconds, rescale it to ffmpegs base timebase.
+        // If the position was given in seconds, rescale it to ffmpeg_nexts base timebase.
         let position = position.rescale((1, 1), rescale::TIME_BASE);
         // If this seek was embedded in the transcoding loop, a call of `flush()`
         // for every opened buffer after the successful seek would be advisable.
@@ -158,7 +158,7 @@ fn main() {
     let out_time_base = octx.stream(0).unwrap().time_base();
 
     let mut decoded = frame::Audio::empty();
-    let mut encoded = ffmpeg::Packet::empty();
+    let mut encoded = ffmpeg_next::Packet::empty();
 
     for (stream, mut packet) in ictx.packets() {
         if stream.index() == transcoder.stream {

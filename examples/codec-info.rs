@@ -1,12 +1,12 @@
-extern crate ffmpeg;
+extern crate ffmpeg_next;
 
 use std::env;
 
 fn main() {
-    ffmpeg::init().unwrap();
+    ffmpeg_next::init().unwrap();
 
     for arg in env::args().skip(1) {
-        if let Some(codec) = ffmpeg::decoder::find_by_name(&arg) {
+        if let Some(codec) = ffmpeg_next::decoder::find_by_name(&arg) {
             println!("type: decoder");
             println!("\t id: {:?}", codec.id());
             println!("\t name: {}", codec.name());
@@ -57,7 +57,7 @@ fn main() {
             println!("\t max_lowres: {:?}", codec.max_lowres());
         }
 
-        if let Some(codec) = ffmpeg::encoder::find_by_name(&arg) {
+        if let Some(codec) = ffmpeg_next::encoder::find_by_name(&arg) {
             println!();
             println!("type: encoder");
             println!("\t id: {:?}", codec.id());
