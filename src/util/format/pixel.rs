@@ -223,9 +223,6 @@ pub enum Pixel {
 
     // --- defaults
     XVMC,
-    Y400A,
-    GRAY8A,
-    GBR24P,
 
     RGB32,
     RGB32_1,
@@ -836,9 +833,6 @@ impl Into<AVPixelFormat> for Pixel {
 
             // --- defaults
             Pixel::XVMC => AV_PIX_FMT_XVMC,
-            Pixel::Y400A => AV_PIX_FMT_Y400A,
-            Pixel::GRAY8A => AV_PIX_FMT_GRAY8A,
-            Pixel::GBR24P => AV_PIX_FMT_GBR24P,
 
             Pixel::RGB32 => AV_PIX_FMT_RGB32,
             Pixel::RGB32_1 => AV_PIX_FMT_RGB32_1,
@@ -927,13 +921,13 @@ impl Into<AVPixelFormat> for Pixel {
             #[cfg(feature = "ffmpeg4")]
             Pixel::OPENCL => AV_PIX_FMT_OPENCL,
             #[cfg(feature = "ffmpeg4")]
-            Pixel::GRAY14BE  => AV_PIX_FMT_GRAY14BE,
+            Pixel::GRAY14BE => AV_PIX_FMT_GRAY14BE,
             #[cfg(feature = "ffmpeg4")]
-            Pixel::GRAY14LE  => AV_PIX_FMT_GRAY14LE,
+            Pixel::GRAY14LE => AV_PIX_FMT_GRAY14LE,
             #[cfg(feature = "ffmpeg4")]
-            Pixel::GRAYF32BE  => AV_PIX_FMT_GRAYF32BE,
+            Pixel::GRAYF32BE => AV_PIX_FMT_GRAYF32BE,
             #[cfg(feature = "ffmpeg4")]
-            Pixel::GRAYF32LE  => AV_PIX_FMT_GRAYF32LE,
+            Pixel::GRAYF32LE => AV_PIX_FMT_GRAYF32LE,
         }
     }
 }
@@ -961,7 +955,7 @@ impl error::Error for ParsePixelError {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             ParsePixelError::NulError(ref e) => Some(e),
             ParsePixelError::UnknownFormat => None,

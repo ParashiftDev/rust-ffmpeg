@@ -3,7 +3,10 @@ extern crate ffmpeg_next;
 use std::env;
 use std::path::Path;
 
-use ffmpeg_next::{codec, filter, format, frame, media};
+use ffmpeg_next::{
+    codec, codec::capabilities::Capabilities, codec::Flags as CodecFlags, filter, format,
+    format::Flags as FormatFlags, frame, media,
+};
 use ffmpeg_next::{rescale, Rescale};
 
 fn filter(
@@ -40,7 +43,7 @@ fn filter(
     if let Some(codec) = encoder.codec() {
         if !codec
             .capabilities()
-            .contains(ffmpeg_next::codec::capabilities::VARIABLE_FRAME_SIZE)
+            .contains(Capabilities::VARIABLE_FRAME_SIZE)
         {
             filter
                 .get("out")
@@ -66,16 +69,15 @@ fn transcoder<P: AsRef<Path>>(
     path: &P,
     filter_spec: &str,
 ) -> Result<Transcoder, ffmpeg_next::Error> {
-    let input = ictx.streams()
+    let input = ictx
+        .streams()
         .best(media::Type::Audio)
         .expect("could not find best audio stream");
     let mut decoder = input.codec().decoder().audio()?;
     let codec = ffmpeg_next::encoder::find(octx.format().codec(path, media::Type::Audio))
         .expect("failed to find encoder")
         .audio()?;
-    let global = octx.format()
-        .flags()
-        .contains(ffmpeg_next::format::flag::GLOBAL_HEADER);
+    let global = octx.format().flags().contains(FormatFlags::GLOBAL_HEADER);
 
     decoder.set_parameters(input.parameters())?;
 
@@ -85,10 +87,10 @@ fn transcoder<P: AsRef<Path>>(
     let channel_layout = codec
         .channel_layouts()
         .map(|cls| cls.best(decoder.channel_layout().channels()))
-        .unwrap_or(ffmpeg_next::channel_layout::STEREO);
+        .unwrap_or(ffmpeg_next::channel_layout::ChannelLayout::STEREO);
 
     if global {
-        encoder.set_flags(ffmpeg_next::codec::flag::GLOBAL_HEADER);
+        encoder.set_flags(CodecFlags::GLOBAL_HEADER);
     }
 
     encoder.set_rate(decoder.rate() as i32);

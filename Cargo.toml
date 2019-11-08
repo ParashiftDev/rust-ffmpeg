@@ -15,7 +15,7 @@ keywords      = ["ffmpeg", "multimedia", "video", "audio"]
 categories    = ["multimedia"]
 
 [features]
-default = ["ffmpeg4", "codec", "device", "filter", "format", "resampling", "software-resampling", "software-scaling", "build"]
+default = ["ffmpeg4", "codec", "device", "filter", "format", "resampling", "software-resampling", "software-scaling"]
 
 ffmpeg4 = []
 
@@ -94,11 +94,7 @@ software-scaling    = ["ffmpeg-sys/swscale", "codec"]
 
 [dependencies]
 libc     = "0.2"
-bitflags = "0.9"
-
-[dependencies.image]
-version  = "0.12"
-optional = true
+bitflags = "1.2.1"
 
 [dependencies.ffmpeg-sys]
 path = "./rust-ffmpeg-sys"

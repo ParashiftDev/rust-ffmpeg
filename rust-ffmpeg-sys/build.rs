@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str;
 
-use regex::Regex;
 use bindgen::callbacks::{IntKind, ParseCallbacks};
+use regex::Regex;
 
 #[derive(Debug)]
 struct Library {
@@ -31,15 +31,42 @@ impl Library {
 }
 
 static LIBRARIES: &[Library] = &[
-    Library {name: "avcodec", is_feature: true},
-    Library {name: "avdevice", is_feature: true},
-    Library {name: "avfilter", is_feature: true},
-    Library {name: "avformat", is_feature: true},
-    Library {name: "avresample", is_feature: true},
-    Library {name: "avutil", is_feature: false},
-    Library {name: "postproc", is_feature: true},
-    Library {name: "swresample", is_feature: true},
-    Library {name: "swscale", is_feature: true},
+    Library {
+        name: "avcodec",
+        is_feature: true,
+    },
+    Library {
+        name: "avdevice",
+        is_feature: true,
+    },
+    Library {
+        name: "avfilter",
+        is_feature: true,
+    },
+    Library {
+        name: "avformat",
+        is_feature: true,
+    },
+    Library {
+        name: "avresample",
+        is_feature: true,
+    },
+    Library {
+        name: "avutil",
+        is_feature: false,
+    },
+    Library {
+        name: "postproc",
+        is_feature: true,
+    },
+    Library {
+        name: "swresample",
+        is_feature: true,
+    },
+    Library {
+        name: "swscale",
+        is_feature: true,
+    },
 ];
 
 #[derive(Debug)]
@@ -52,11 +79,13 @@ impl ParseCallbacks for IntCallbacks {
         let codec_flag = Regex::new(r"^AV_CODEC_FLAG").unwrap();
         let error_max_size = Regex::new(r"^AV_ERROR_MAX_STRING_SIZE").unwrap();
 
-        if value >= i64::min_value() as i64 && value <= i64::max_value() as i64
+        if value >= i64::min_value() as i64
+            && value <= i64::max_value() as i64
             && ch_layout.is_match(_name)
         {
             Some(IntKind::ULongLong)
-        } else if value >= i32::min_value() as i64 && value <= i32::max_value() as i64
+        } else if value >= i32::min_value() as i64
+            && value <= i32::max_value() as i64
             && (codec_cap.is_match(_name) || codec_flag.is_match(_name))
         {
             Some(IntKind::UInt)
@@ -69,6 +98,15 @@ impl ParseCallbacks for IntCallbacks {
             Some(IntKind::Int)
         } else {
             None
+        }
+    }
+
+    fn will_parse_macro(&self, name: &str) -> bindgen::callbacks::MacroParsingBehavior {
+        match name {
+            "FP_INFINITE" | "FP_NAN" | "FP_NORMAL" | "FP_SUBNORMAL" | "FP_ZERO" => {
+                bindgen::callbacks::MacroParsingBehavior::Ignore
+            }
+            _ => bindgen::callbacks::MacroParsingBehavior::Default,
         }
     }
 }
@@ -103,22 +141,19 @@ fn search() -> PathBuf {
 }
 
 fn fetch() -> io::Result<()> {
-
     //If the directory is already there...
     if output().join(format!("ffmpeg-{}", version())).exists() {
-        return Ok(())
+        return Ok(());
     }
 
-    let status = try!(
-        Command::new("git")
-            .current_dir(&output())
-            .arg("clone")
-            .arg("-b")
-            .arg(format!("release/{}", version()))
-            .arg("https://github.com/FFmpeg/FFmpeg")
-            .arg(format!("ffmpeg-{}", version()))
-            .status()
-    );
+    let status = Command::new("git")
+        .current_dir(&output())
+        .arg("clone")
+        .arg("-b")
+        .arg(format!("release/{}", version()))
+        .arg("https://github.com/FFmpeg/FFmpeg")
+        .arg(format!("ffmpeg-{}", version()))
+        .status()?;
 
     if status.success() {
         Ok(())
@@ -130,8 +165,7 @@ fn fetch() -> io::Result<()> {
 fn switch(configure: &mut Command, feature: &str, name: &str) {
     let arg = if env::var("CARGO_FEATURE_".to_string() + feature).is_ok() {
         "--enable-"
-    }
-    else {
+    } else {
         "--disable-"
     };
     configure.arg(arg.to_string() + name);
@@ -165,11 +199,11 @@ fn build() -> io::Result<()> {
     configure.arg("--disable-programs");
 
     macro_rules! enable {
-        ($conf:expr, $feat:expr, $name:expr) => (
+        ($conf:expr, $feat:expr, $name:expr) => {
             if env::var(concat!("CARGO_FEATURE_", $feat)).is_ok() {
                 $conf.arg(concat!("--enable-", $name));
             }
-        )
+        };
     }
 
     // macro_rules! disable {
@@ -273,24 +307,22 @@ fn build() -> io::Result<()> {
     }
 
     // run make
-    if !try!(
-        Command::new("make")
-            .arg("-j")
-            .arg(num_cpus::get().to_string())
-            .current_dir(&source())
-            .status()
-    ).success()
+    if !Command::new("make")
+        .arg("-j")
+        .arg(num_cpus::get().to_string())
+        .current_dir(&source())
+        .status()?
+        .success()
     {
         return Err(io::Error::new(io::ErrorKind::Other, "make failed"));
     }
 
     // run make install
-    if !try!(
-        Command::new("make")
-            .current_dir(&source())
-            .arg("install")
-            .status()
-    ).success()
+    if !Command::new("make")
+        .current_dir(&source())
+        .arg("install")
+        .status()?
+        .success()
     {
         return Err(io::Error::new(io::ErrorKind::Other, "make install failed"));
     }
@@ -368,7 +400,8 @@ fn check_features(
            "#,
         includes_code = includes_code,
         main_code = main_code
-    ).expect("Write failed");
+    )
+    .expect("Write failed");
 
     let executable = out_dir.join(if cfg!(windows) { "check.exe" } else { "check" });
     let mut compiler = cc::Build::new().get_compiler().to_command();
@@ -463,8 +496,7 @@ fn search_include(include_paths: &Vec<PathBuf>, header: &str) -> String {
 fn link_to_libraries(statik: bool) {
     let ffmpeg_ty = if statik { "static" } else { "dylib" };
     for lib in LIBRARIES {
-        let feat_is_enabled =
-            lib.feature_name().and_then(|f| env::var(&f).ok()).is_some();
+        let feat_is_enabled = lib.feature_name().and_then(|f| env::var(&f).ok()).is_some();
         if !lib.is_feature || feat_is_enabled {
             println!("cargo:rustc-link-lib={}={}", ffmpeg_ty, lib.name);
         }
@@ -549,7 +581,7 @@ fn main() {
                     .unwrap()
                     .include_paths;
             }
-        };
+        }
 
         pkg_config::Config::new()
             .statik(statik)
@@ -1019,9 +1051,10 @@ fn main() {
     }
 
     // Finish the builder and generate the bindings.
-    let bindings = builder.generate()
-    // Unwrap the Result and panic on failure.
-    .expect("Unable to generate bindings");
+    let bindings = builder
+        .generate()
+        // Unwrap the Result and panic on failure.
+        .expect("Unable to generate bindings");
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     bindings
