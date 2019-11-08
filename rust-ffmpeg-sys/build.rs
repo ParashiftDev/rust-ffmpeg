@@ -103,6 +103,12 @@ fn search() -> PathBuf {
 }
 
 fn fetch() -> io::Result<()> {
+
+    //If the directory is already there...
+    if output().join(format!("ffmpeg-{}", version())).exists() {
+        return Ok(())
+    }
+
     let status = try!(
         Command::new("git")
             .current_dir(&output())
